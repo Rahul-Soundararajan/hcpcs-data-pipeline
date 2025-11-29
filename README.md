@@ -61,7 +61,8 @@ The pipeline demonstrates real-world skills in orchestration, data modeling, mon
             Validation
             Failure detection
             Email notifications
-            Alerting:
+					
+  Alerting:
                 Email is triggered if:
                 ❌ ETL fails
                 ❌ Data validation fails
