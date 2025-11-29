@@ -1,0 +1,20 @@
+1. Install cron to your linux
+  
+   Use: sudo apt install cron
+
+
+2.  Add below two commands to crontab editor this will schedule and run every 5 minutes
+
+Use: crontab -e
+
+*/5 * * * * /usr/bin/python3 /home/rahul/airflow/dags/HCPCS_ETL_SCD2.py >> /home/rahul/logs/hcpcs_etl.log 2>&1
+*/5 * * * * sleep 60 && /usr/bin/python3 /home/rahul/airflow/dags/HCPCS_Post_Validation.py >> /home/rahul/logs/hcpcs_validation.log 2>&1
+
+Note: it show this line "crontab: installing new crontab"
+
+3. Start the cron service if job not running
+
+   Use: sudo service cron start
+   
+Note:   It will show this indication "* Starting periodic command scheduler cron"   
+   
