@@ -1,93 +1,114 @@
 🚀 HCPCS Data Engineering Pipeline
-A complete end-to-end data engineering pipeline that extracts, processes, validates, and analyzes HCPCS Level II medical codes from the official website.
+
+A complete end-to-end data engineering project that extracts, processes, validates, and analyzes HCPCS Level II medical codes from the official source.
 
 📌 Project Overview
-This project builds a full data workflow that ingests HCPCS codes from:
+
+This project builds a full data pipeline that ingests HCPCS data from:
+
 🔗 https://www.hcpcsdata.com/Codes
-It covers:
-✔ Web scraping 17 HCPCS categories
-✔ SCD-Type 2 historical data modeling
-✔ Python ETL to MySQL
-✔ Automated data validation
-✔ Scheduling + email alerts
-✔ Analytical SQL for insights
-The pipeline demonstrates real-world skills in orchestration, data modeling, monitoring, and analytics.
+
+It includes:
+
+Web scraping of all 17 HCPCS categories
+
+SCD-Type 2 data warehouse modeling
+
+Python-based ETL pipeline (incremental + historical updates)
+
+Data quality validation checks
+
+Scheduled automation via cron
+
+Email alerting on pipeline/validation failures
+
+Analytical SQL queries for reporting
 
 🧩 Architecture Components
+1️⃣ Data Extraction (Web Scraping)
 
-1️. Data Extraction (Web Scraping)
+Scrapes all 17 category pages from hcpcsdata.com
 
-    Scrapes all 17 HCPCS categories
-      Extracts:
-        group_code
-        category_name
-        hcpcs_code
-        long_description
-    
-    --Saves raw/extracted data as CSV for downstream ETL
-    --Error-handling added for network and parsing failures
+Extracts:
 
-2️. Data Modeling — SCD Type-2
+group_code
 
-    Schema used:
-    CREATE TABLE hcpcs_codes (
-      id BIGSERIAL PRIMARY KEY,
-      group_code CHAR(1) NOT NULL,
-      category_name VARCHAR(255) NOT NULL,
-      hcpcs_code VARCHAR(10) NOT NULL,
-      long_description TEXT NOT NULL,
-      effective_date DATE DEFAULT CURRENT_DATE,
-      end_date DATE,
-      is_current CHAR(1) DEFAULT 'Y'
-    );
-	
-    SCD-Type 2 handling includes:
-    ✔ If code + description match → skip
-    ✔ If same code, new description → close old record, insert new version
-    ✔ If same description, different code → insert new
-    ✔ If completely new → insert new
-    ✔ Ensures accurate history tracking for each HCPCS code
-	
-3️. Orchestration & Monitoring
+category_name
 
-    --Crontab used for pipeline scheduling
-	
-    --HCPCS_ETL_SCD2.py → Loads data into MySQL
-        Master runner shell script automates:
-            ETL execution
-            Validation
-            Failure detection
-            Email notifications
-            Alerting:
-                Email is triggered if:
-                ❌ ETL fails
-                ❌ Data validation fails
-				
-    --HCPCS_Post_Validation.py → Runs Data Quality Validation checks
-	
-	    ✔ Duplicate active records
-        ✔ Missing mandatory fields
-        ✔ Incorrect effective/end-date relationships
-        ✔ Future-dated effective dates
-        ✔ SCD2 versioning issues
-        ✔ Orphan codes/descriptions
-        ✔ Historical inconsistencies
-		
-    --Centralized log folder created for ETL + validation logs
-					
-    4️ Data Quality Validation
-    Post-load validation queries check for:
-    ✔ Duplicate active records
-    ✔ Missing mandatory fields
-    ✔ Incorrect effective/end-date relationships
-    ✔ Future-dated effective dates
-    ✔ SCD2 versioning issues
-    ✔ Orphan codes/descriptions
-    ✔ Historical inconsistencies
-    If any check fails, the pipeline sends an automated alert email.
+hcpcs_code
 
- 5️. Analysis (SQL Queries Included)
-    📊 Count of codes per group
-    🏆 Top 5 categories by number of codes
-    🔄 Codes that changed descriptions over time
-    ⏳ Codes active in 2022 but expired before 2024
+long_description
+
+Stores raw data in CSV format for ingestion
+
+2️⃣ Data Modeling – SCD Type 2
+
+Database schema used:
+
+CREATE TABLE hcpcs_codes (
+  id BIGSERIAL PRIMARY KEY,
+  group_code CHAR(1) NOT NULL,
+  category_name VARCHAR(255) NOT NULL,
+  hcpcs_code VARCHAR(10) NOT NULL,
+  long_description TEXT NOT NULL,
+  effective_date DATE DEFAULT CURRENT_DATE,
+  end_date DATE,
+  is_current CHAR(1) DEFAULT 'Y'
+);
+
+
+Historical Tracking Logic (SCD-2):
+
+✔ Same code + same description → skip
+
+✔ Same code, new description → expire old, insert new
+
+✔ New code, same description → insert as new
+
+✔ Completely new record → insert
+
+This allows full change history over time.
+
+⚙️ 3️⃣ Orchestration & Monitoring
+
+Linux cron job triggers ETL every 3 minutes
+
+Post-load validation script ensures data consistency
+
+Logs maintained for debugging and audit
+
+Email alerts sent when:
+
+ETL script fails
+
+Validation checks fail
+
+🔍 4️⃣ Data Quality Validation
+
+The pipeline validates:
+
+✔ Active duplicate codes
+
+✔ Missing required fields
+
+✔ Invalid date (effective_date > end_date)
+
+✔ Future-dated records
+
+✔ Incorrect SCD2 versioning
+
+✔ Records without proper end_date closures
+
+Pipeline stops + triggers alert on any failure.
+
+📊 5️⃣ Analytical SQL Outputs
+
+Includes SQL answers for:
+
+Count of codes per group
+
+Top 5 categories with highest codes
+
+Codes whose descriptions changed over time
+
+Codes active in 2022 but expired before 2024
